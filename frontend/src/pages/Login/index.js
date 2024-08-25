@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { Link as RouterLink } from "react-router-dom";
 
 import Button from "@material-ui/core/Button";
@@ -15,9 +15,8 @@ import Container from "@material-ui/core/Container";
 import { i18n } from "../../translate/i18n";
 
 import { AuthContext } from "../../context/Auth/AuthContext";
-import logo from "../../assets/vector/logo.svg";
-import logoDark from "../../assets/vector/logo-dark.svg";
-
+import useSettings from "../../hooks/useSettings";
+import { getBackendURL } from "../../services/config";
 
 const Copyright = () => {
 	return (
@@ -36,7 +35,7 @@ const useStyles = makeStyles(theme => ({
 	root: {
 		width: "100vw",
 		height: "100vh",
-		background: `linear-gradient(to right, ${ theme.mode === 'light' ? '#fff , #fff ,  #00f , #fff, #fff' : '#000, #000, #39ACE7, #000, #000' })`,
+		background: `linear-gradient(to right, ${ theme.mode === "light" ? "#fff , #fff , " + theme.palette.primary.main + " , #fff, #fff" : "#000, #000, " + theme.palette.primary.main + ", #000, #000" })`,
 		backgroundRepeat: "no-repeat",
 		backgroundSize: "100% 100%",
 		backgroundPosition: "center",
@@ -67,15 +66,23 @@ const useStyles = makeStyles(theme => ({
 	},
 	powered: {
 		color: "white"
-	}
+	},
+	
+	logoImg: {
+    width: "100%",
+    margin: "0 auto",
+    content: "url(" + (theme.mode === "light" ? theme.calculatedLogoLight() : theme.calculatedLogoDark()) + ")"
+  }
+	
 }));
 
 const Login = () => {
 	const classes = useStyles();
   const theme = useTheme();
-
+  const { getPublicSetting } = useSettings();
 
 	const [user, setUser] = useState({ email: "", password: "" });
+	const [allowSignup, setAllowSignup] = useState(false);
 
 	const { handleLogin } = useContext(AuthContext);
 
@@ -88,13 +95,24 @@ const Login = () => {
 		handleLogin(user);
 	};
 
+  useEffect(() => {
+    getPublicSetting("allowSignup").then(
+      (data) => {
+        setAllowSignup(data === "enabled");
+      }
+    ).catch((error) => {
+      console.log("Error reading setting",error);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 	return (
 		<div className={classes.root}>
 		<Container component="main" maxWidth="xs">
 			<CssBaseline/>
 			<div className={classes.paper}>
 				<div>
-					<img style={{ margin: "0 auto", width: "100%" }} src={theme.mode === "light" ? logo : logoDark} alt="Whats" />
+					<img className={classes.logoImg} />
 				</div>
 				{/*<Typography component="h1" variant="h5">
 					{i18n.t("login.title")}
@@ -135,7 +153,8 @@ const Login = () => {
 					>
 						{i18n.t("login.buttons.submit")}
 					</Button>
-					{ <Grid container>
+					{ allowSignup && 
+					  <Grid container>
 						<Grid item>
 							<Link
 								href="#"

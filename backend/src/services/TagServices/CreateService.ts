@@ -6,7 +6,7 @@ import Tag from "../../models/Tag";
 interface Request {
   name: string;
   color: string;
-  kanban: string;
+  kanban: number;
   companyId: number;
 }
 
@@ -24,6 +24,10 @@ const CreateService = async ({
     await schema.validate({ name });
   } catch (err: any) {
     throw new AppError(err.message);
+  }
+
+  if (kanban === null) {
+    kanban = 0;
   }
 
   const [tag] = await Tag.findOrCreate({

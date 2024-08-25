@@ -25,11 +25,6 @@ type StoreData = {
   userId: number | number;
 };
 
-type FindParams = {
-  companyId: string;
-  userId: string;
-};
-
 export const index = async (req: Request, res: Response): Promise<Response> => {
   const { searchParam, pageNumber, userId } = req.query as IndexQuery;
   const { companyId } = req.user;
@@ -62,7 +57,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   const record = await CreateService({
     ...data,
     companyId,
-    userId: req.user.id
+    userId: Number.parseInt(req.user.id, 10)
   });
 
   const io = getIO();
@@ -104,8 +99,8 @@ export const update = async (
 
   const record = await UpdateService({
     ...data,
-    userId: req.user.id,
-    id,
+    userId: Number.parseInt(req.user.id, 10),
+    id: Number.parseInt(id, 10),
   });
 
   const io = getIO();
@@ -139,8 +134,7 @@ export const findList = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
-  const params = req.query as FindParams;
-  const records: QuickMessage[] = await FindService(params);
+  const records: QuickMessage[] = await FindService({userId: parseInt(req.user.id,10), companyId: req.user.companyId});
 
   return res.status(200).json(records);
 };
